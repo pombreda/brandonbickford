@@ -1,7 +1,5 @@
 #!env python
-"""Manager to let a receiver listen to messages about an interface by a sender.
-
-A little simpler than zope.interface.adapter.AdapterRegistry
+"""Manager to let a receiver listen to messages about an interface by a sender.  A little simpler than zope.interface.adapter.AdapterRegistry
 """
 import itertools
 from zope.interface import Interface, implements
@@ -12,6 +10,7 @@ class InterfaceError(ValueError):
 
 # marker type
 Any = types.ClassType('Any', (object, ), {})() 
+Any.__doc__ = "Any Sender"
 
 class SubscriptionManager(object):
 	"I manage interface->sender->listeners"
@@ -46,7 +45,7 @@ class SubscriptionManager(object):
 	
 		return itertools.ifilter(seen, _subscribers())
 
-__all__ = ['SubscriptionManager', 'Any']
+__all__ = ['SubscriptionManager', 'Any', 'InterfaceError']
 
 if __name__ == "__main__":
 	import unittest
