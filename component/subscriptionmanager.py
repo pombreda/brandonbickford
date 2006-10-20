@@ -1,5 +1,8 @@
 #!env python
-"simpler than zope.interface.adapter.AdapterRegistry()" 
+"""Manager to let a receiver listen to messages about an interface by a sender.
+
+A little simpler than zope.interface.adapter.AdapterRegistry
+"""
 import itertools
 from zope.interface import Interface, implements
 import types
@@ -11,26 +14,26 @@ class InterfaceError(ValueError):
 Any = types.ClassType('Any', (object, ), {})() 
 
 class SubscriptionManager(object):
-	"i manage interface->sender->listeners"
+	"I manage interface->sender->listeners"
 
 	def __init__(self): 
-		self.subscriptions = {}
+		self.__subscriptions = {}
  
 	def subscribe(self, interface, receiver, sender = Any):
 		"subscribe receiver with interface and optional sender"
 		if not interface.providedBy(receiver):
 			raise InterfaceError(receiver)
 
-		subscribers = self.subscriptions.setdefault((interface, sender), [])
+		subscribers = self.__subscriptions.setdefault((interface, sender), [])
 		if receiver not in subscribers: 
 			subscribers.append(receiver) 
 
 	def subscribers(self, interface, sender = Any):
 		"iterate over the subscribers for an interface and optional sender"
 		def _subscribers():
-			iter1 = iter(self.subscriptions.get((interface, sender), ()))
+			iter1 = iter(self.__subscriptions.get((interface, sender), ()))
 			if sender != Any:
-				return itertools.chain(iter1, self.subscriptions.get((interface, Any), ())) 
+				return itertools.chain(iter1, self.__subscriptions.get((interface, Any), ())) 
 			else: 
 				return iter1
 			
@@ -42,6 +45,8 @@ class SubscriptionManager(object):
 			return False
 	
 		return itertools.ifilter(seen, _subscribers())
+
+__all__ = ['SubscriptionManager', 'Any']
 
 if __name__ == "__main__":
 	import unittest
