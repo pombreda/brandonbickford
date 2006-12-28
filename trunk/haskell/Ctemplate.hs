@@ -1,14 +1,43 @@
-#!/opt/local/bin/runhugs
 {-- parser for a language like Google Ctemplate.  --} 
-module Ctemplate (parseTemplate, run, Block) where
+module Ctemplate (parseTemplate, run, Block, fill, TemplateDictionary(TemplateDictionary), runOrError) where
 
 import Text.ParserCombinators.Parsec
 import Control.Monad
 import qualified Text.ParserCombinators.Parsec.Token as P
-import qualified Data.Map as Map
+import Data.Map (Map, member, findWithDefault) 
+import Data.Maybe
+import qualified Data.Map
 
 data Block = Display String [String] | Section String [Block] | Raw String | IncludeFile String 
    deriving (Show, Ord, Eq) 
+
+data TemplateDictionary = TemplateDictionary { values :: Map String String, sections :: Map String [TemplateDictionary]}
+
+
+{-- FILLING --}
+
+fill :: [Block] -> [TemplateDictionary] -> String
+fill templateblocks template_dictionary_stack = foldl (++) "" $ map fill' templateblocks
+   where fill' (Raw x) = x
+         fill' (IncludeFile x) = "[[FILE " ++ x ++ "]]"
+         fill' (Display name modifiers) =  
+            let matching_settings = catMaybes $ maybe_matching_settings
+                maybe_matching_settings :: [Maybe String]
+                maybe_matching_settings = map (Data.Map.lookup name) settings_list
+                settings_list :: [Map String String]
+                settings_list = map values template_dictionary_stack
+
+            in case matching_settings of 
+               [] -> fail $ "can't find " ++ name
+               matches -> head matches 
+
+         fill' (Section name blocks) = 
+            let subgroups = map (\x -> fill blocks $ x:template_dictionary_stack) subdictionaries 
+                subdictionaries = findWithDefault [] name $ sections current_dictionary  
+                current_dictionary = head template_dictionary_stack
+            in foldl (++) "" subgroups  
+                
+{-- PARSING --}
 
 in_tag = between (string "{{") (string "}}") 
 
@@ -69,4 +98,9 @@ run input =
       Right x  -> 
          print x
 
+runOrError input = 
+   case (parseTemplate input) of
+      Left err -> error $ "parse error" ++ (show err)
+      Right x  -> x 
+            
 parseTemplate = parse parseTemplate' "" 
