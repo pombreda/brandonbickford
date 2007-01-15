@@ -63,6 +63,7 @@ class Tag(object):
    year = property(__year) 
    title = property(__title)
    artist = property(__artist) 
+   album = property(__album) 
 
       
 def file_to_tag(f): 
@@ -75,7 +76,10 @@ if __name__ == "__main__":
       def test_tag(self): 
          t = file_to_tag('01.mp3') 
          self.assertEquals(t.artist, u'Magnolia Electric Company')
-
+         self.assertEquals(t.album, u'Trials And Errors')
+         self.assertEquals(t.track, 1)
+         self.assertEquals(t.year, 2004)
+         self.assertEquals(t.title, u'The Dark Don\'t Hide It')
    unittest.main() 
 
 
