@@ -1,20 +1,31 @@
 """This is a scraper for the kalx playlist
 current playlist url: http://kalx.berkeley.edu/last24hours.php
-
 """
+
+__author__ = 'Brandon Bickford <bran@dv8.org>'
+__copyright__ = """
+Copyright 2007 Brandon Bickford
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+"""
+
 from BeautifulSoup import BeautifulStoneSoup
 import sys
 import datetime
 import re
 import unittest
 import time
-
-def text(node): 
-   t = ''
-   for child in node.recursiveChildGenerator(): 
-      if isinstance(child, unicode): 
-         t += child
-   return t
 
 def match_date(row): 
    if row.strong != None:
@@ -96,6 +107,17 @@ class TestScrape(unittest.TestCase):
 
 
 def parse(input):
+   """Parse string input into track dictionaries
+   Args:
+      input: file, file ref to the kalx playlist webpage output 
+   Returns:
+      [{
+         u'artist': u'artist name',
+         u'title': u'title',
+         u'date': datetime instance,
+         u'label': u'label',
+      }, ...]
+   """
    result = []
    soup = BeautifulStoneSoup(input)
    current_date = None
@@ -103,11 +125,9 @@ def parse(input):
       a_date = match_date(row) 
       if a_date:
          current_date = a_date
-         print current_date
          continue
       
       if match_mike_break(row):
-         #print "mike break", row
          continue
 
       m = match_track(row)
@@ -127,4 +147,5 @@ if __name__ == "__main__":
       result = parse(open('last.html'))
       print result
 
+__all__ = ['parse'] 
 
